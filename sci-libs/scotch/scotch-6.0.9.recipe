@@ -40,6 +40,11 @@ libVersionCompat="$libVersion compat >= ${libVersion%%.*}"
 PROVIDES="
 	scotch$secondaryArchSuffix = $portVersionCompat
 	lib:libesmumps$secondaryArchSuffix = $libVersionCompat
+	lib:libptesmumps$secondaryArchSuffix = $libVersionCompat
+	lib:libptscotch$secondaryArchSuffix = $libVersionCompat
+	lib:libptscotcherr$secondaryArchSuffix = $libVersionCompat
+	lib:libptscotcherrexit$secondaryArchSuffix = $libVersionCompat
+	lib:libptscotchparmetis$secondaryArchSuffix = $libVersionCompat
 	lib:libscotch$secondaryArchSuffix = $libVersionCompat
 	lib:libscotcherr$secondaryArchSuffix = $libVersionCompat
 	lib:libscotcherrexit$secondaryArchSuffix = $libVersionCompat
@@ -49,12 +54,21 @@ REQUIRES="
 	haiku$secondaryArchSuffix
 	lib:liblzma$secondaryArchSuffix
 	lib:libbz2$secondaryArchSuffix
+	lib:libevent$secondaryArchSuffix
+	lib:libevent_pthreads$secondaryArchSuffix
+	lib:libhwloc$secondaryArchSuffix
+	lib:libmpi$secondaryArchSuffix
 	lib:libz$secondaryArchSuffix
 	"
 
 PROVIDES_devel="
 	scotch${secondaryArchSuffix}_devel = $portVersionCompat
 	devel:libesmumps$secondaryArchSuffix = $libVersionCompat
+	devel:libptesmumps$secondaryArchSuffix = $libVersionCompat
+	devel:libptscotch$secondaryArchSuffix = $libVersionCompat
+	devel:libptscotcherr$secondaryArchSuffix = $libVersionCompat
+	devel:libptscotcherrexit$secondaryArchSuffix = $libVersionCompat
+	devel:libptscotchparmetis$secondaryArchSuffix = $libVersionCompat
 	devel:libscotch$secondaryArchSuffix = $libVersionCompat
 	devel:libscotcherr$secondaryArchSuffix = $libVersionCompat
 	devel:libscotcherrexit$secondaryArchSuffix = $libVersionCompat
@@ -100,6 +114,10 @@ REQUIRES_tools="
 	haiku$secondaryArchSuffix
 	lib:liblzma$secondaryArchSuffix
 	lib:libbz2$secondaryArchSuffix
+	lib:libevent$secondaryArchSuffix
+	lib:libevent_pthreads$secondaryArchSuffix
+	lib:libhwloc$secondaryArchSuffix
+	lib:libmpi$secondaryArchSuffix
 	lib:libz$secondaryArchSuffix
 	"
 
@@ -107,6 +125,10 @@ BUILD_REQUIRES="
 	haiku${secondaryArchSuffix}_devel
 	devel:liblzma$secondaryArchSuffix
 	devel:libbz2$secondaryArchSuffix
+	devel:libevent$secondaryArchSuffix
+	devel:libevent_pthreads$secondaryArchSuffix
+	devel:libhwloc$secondaryArchSuffix
+	devel:libmpi$secondaryArchSuffix
 	devel:libz$secondaryArchSuffix
 	"
 BUILD_PREREQUIRES="
@@ -122,6 +144,11 @@ TEST_REQUIRES="
 
 defineDebugInfoPackage scotch$secondaryArchSuffix \
 	"$libDir"/libesmumps.so \
+	"$libDir"/libptesmumps.so \
+	"$libDir"/libptscotch.so \
+	"$libDir"/libptscotcherr.so \
+	"$libDir"/libptscotcherrexit.so \
+	"$libDir"/libptscotchparmetis.so \
 	"$libDir"/libscotch.so \
 	"$libDir"/libscotcherr.so \
 	"$libDir"/libscotcherrexit.so\
@@ -129,10 +156,8 @@ defineDebugInfoPackage scotch$secondaryArchSuffix \
 
 PATCH()
 {
-	# make install will fail because these binaries are missing
-	# This could be caused by the ptscotch target which has been disabled on this release
-	# Thus, this is not going to be a permanent patch, hence it is not
-	# in the main patch set
+	# These ptscotch binaries are still broken due to libevent being outdated on HP,
+	# so they are disabled here.
 	sed -i 's|-\$(CP) -f \.\./bin/d\[agm\]\*\$(EXE) \$(bindir)||g' src/Makefile
 }
 
@@ -140,7 +165,7 @@ BUILD()
 {
 	cp "$portDir"/additional-files/Makefile.inc."${effectiveTargetArchitecture}"_pc_haiku.shlib src/Makefile.inc
 
-	make -C src $jobArgs scotch esmumps
+	make -C src $jobArgs scotch esmumps ptscotch ptesmumps
 }
 
 
@@ -155,7 +180,7 @@ INSTALL()
 	make -C src $jobArgs bindir=$commandBinDir includedir=$includeDir libdir=$libDir datarootdir=$dataDir mandir=$manDir install
 
 	# create symlinks
-	declare -a libraries=("libesmumps" "libscotch" "libscotcherr" "libscotcherrexit" "libscotchmetis")
+	declare -a libraries=("libesmumps" "libptesmumps" "libptscotch" "libptscotcherr" "libptscotcherrexit" "libptscotchparmetis" "libscotch" "libscotcherr" "libscotcherrexit" "libscotchmetis")
 	for soname in "${libraries[@]}"
 	do
 		ln -s ${libDir}/${soname}.so ${libDir}/${soname}.so.$libVersion
@@ -188,6 +213,34 @@ INSTALL()
 		Private: -lz -llzma -lbz2 -lm
 		Cflags: -I\${includedir}
 	EOF
+	
+	cat <<-EOF > $libDir/pkgconfig/ptscotch.pc
+		prefix=${prefix}
+		libdir=\${prefix}/develop/lib
+		includedir=\${prefix}/develop/headers
+		Name: ptscotch
+		Description: ${SUMMARY} (Multi-Threaded)
+		Version: ${portVersion}
+		URL: ${HOMEPAGE}
+		Libs: -L\${libdir} -lptscotcherr -lptscotch
+		Private: -lm -lz -lrt
+		Cflags: -I\${includedir}
+		Requires: scotchmetis
+	EOF
+		
+	cat <<-EOF > $libDir/pkgconfig/ptscotchparmetis.pc
+		prefix=${prefix}
+		libdir=\${prefix}/develop/lib
+		includedir=\${prefix}/develop/headers
+		Name: ptscotchparmetis
+		Description: ${SUMMARY} (Multi-Threaded)
+		Version: ${portVersion}
+		URL: ${HOMEPAGE}
+		Libs: -L\${libdir} -lptscotchparmetis -lptscotcherr -lptscotch
+		Private: -lm -lz -lrt
+		Cflags: -I\${includedir}
+		Requires: scotchmetis
+	EOF
 
 	prepareInstalledDevelLibs `printf '%s\n' "$(IFS=' '; printf '%s' "${libraries[*]}")"`
 	fixPkgconfig
@@ -211,11 +264,6 @@ TEST()
 	# won't work from HP (although they will from bare Terminal).
 	# Makefile is patched just to have these paths overridable by command line
 	sed -i 's|= \.\.\/\.\.\/|?= \.\.\/\.\.\/|g' src/check/Makefile
-
-	# NOTE:
-	# Tests are commented out because for two reasons:
-	#	1. They don't work from HP (Makefile issue?)
-	#	2. Some of them will hang (bug in source code and/or incompatibilities with Haiku?)
 
 	SCOTCHBINDIR="$sourceDir/bin" \
 		SCOTCHLIBDIR="$sourceDir/lib" \
