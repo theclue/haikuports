@@ -54,8 +54,8 @@ REQUIRES="
 	haiku$secondaryArchSuffix
 	lib:liblzma$secondaryArchSuffix
 	lib:libbz2$secondaryArchSuffix
-	lib:libevent$secondaryArchSuffix
-	lib:libevent_pthreads$secondaryArchSuffix
+	lib:libevent_2.1$secondaryArchSuffix
+	lib:libevent_pthreads_2.1$secondaryArchSuffix
 	lib:libhwloc$secondaryArchSuffix
 	lib:libmpi$secondaryArchSuffix
 	lib:libz$secondaryArchSuffix
@@ -88,6 +88,12 @@ PROVIDES_tools="
 	cmd:amk_m2$commandSuffix = $portVersionCompat
 	cmd:amk_p2$commandSuffix = $portVersionCompat
 	cmd:atst$commandSuffix = $portVersionCompat
+	cmd:dggath$commandSuffix = $portVersionCompat
+	cmd:dgmap$commandSuffix = $portVersionCompat
+	cmd:dgord$commandSuffix = $portVersionCompat
+	cmd:dgpart$commandSuffix = $portVersionCompat
+	cmd:dgscat$commandSuffix = $portVersionCompat
+	cmd:dgtst$commandSuffix = $portVersionCompat
 	cmd:gbase$commandSuffix = $portVersionCompat
 	cmd:gcv$commandSuffix = $portVersionCompat
 	cmd:gmap$commandSuffix = $portVersionCompat
@@ -114,8 +120,9 @@ REQUIRES_tools="
 	haiku$secondaryArchSuffix
 	lib:liblzma$secondaryArchSuffix
 	lib:libbz2$secondaryArchSuffix
-	lib:libevent$secondaryArchSuffix
-	lib:libevent_pthreads$secondaryArchSuffix
+	lib:libevent_2.1$secondaryArchSuffix
+	lib:libevent_pthreads_2.1$secondaryArchSuffix
+	lib:libexecinfo$secondaryArchSuffix
 	lib:libhwloc$secondaryArchSuffix
 	lib:libmpi$secondaryArchSuffix
 	lib:libz$secondaryArchSuffix
@@ -125,8 +132,8 @@ BUILD_REQUIRES="
 	haiku${secondaryArchSuffix}_devel
 	devel:liblzma$secondaryArchSuffix
 	devel:libbz2$secondaryArchSuffix
-	devel:libevent$secondaryArchSuffix
-	devel:libevent_pthreads$secondaryArchSuffix
+	devel:libevent_2.1$secondaryArchSuffix
+	devel:libevent_pthreads_2.1$secondaryArchSuffix
 	devel:libhwloc$secondaryArchSuffix
 	devel:libmpi$secondaryArchSuffix
 	devel:libz$secondaryArchSuffix
@@ -158,7 +165,8 @@ PATCH()
 {
 	# These ptscotch binaries are still broken due to libevent being outdated on HP,
 	# so they are disabled here.
-	sed -i 's|-\$(CP) -f \.\./bin/d\[agm\]\*\$(EXE) \$(bindir)||g' src/Makefile
+	#sed -i 's|-\$(CP) -f \.\./bin/d\[agm\]\*\$(EXE) \$(bindir)||g' src/Makefile
+	true
 }
 
 BUILD()
